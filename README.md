@@ -1,53 +1,59 @@
-# devweb — Réducteur d'URL (Node.js / Express)
+# Réducteur d'URL — TP devweb
 
-Service de réduction d'URL (type bit.ly / tinyurl.com) : API REST + client
-serveur (EJS) + client AJAX (SPA).
+Ce projet permet de transformer une URL longue en un lien court, un peu
+comme bit.ly ou tinyurl.com. Il y a une API (qui répond en JSON) et deux
+petites interfaces web pour l'utiliser sans passer par des commandes.
 
-## État d'avancement
+## Ce qui a été fait
 
-- [x] Partie 1 — prise en main (voir `REPONSES.md`) — tag `reponses`
-- [x] Partie 2 — API v1 complète (JSON) — tag `api-v1`
-- [x] Partie 3 — négociation de contenu + rendu HTML (EJS) — tag `api-v2`
-- [x] Partie 4 — client AJAX (SPA) sur l'API v2 — tag `client-ajax`
-- [x] Partie 5 — suppression authentifiée par clé secrète — tag `api-v2-delete`
+- [x] Partie 1 : réponses aux questions — tag `reponses`
+- [x] Partie 2 : création et redirection de liens (API v1, en JSON) — tag `api-v1`
+- [x] Partie 3 : la même API mais avec une page HTML en plus — tag `api-v2`
+- [x] Partie 4 : une page web qui utilise l'API sans se recharger (AJAX) — tag `client-ajax`
+- [x] Partie 5 : possibilité de supprimer un lien avec un code secret — tag `api-v2-delete`
 
-## Installation
+## Comment installer le projet
 
-```bash
+D'abord installer les dépendances (les bibliothèques dont le code a besoin) :
+
+'''
 npm install
-```
+'''
 
-Créer un fichier `.env` à la racine (déjà fourni, à adapter si besoin) :
+Il faut aussi un fichier `.env` à la racine du projet (déjà présent, on
+peut le modifier si besoin) qui contient les réglages de l'application :
 
-```
+'''
 PORT=8080
 LINK_LEN=6
 DB_FILE=database/database.sqlite
 DB_SCHEMA=database/database.sql
 LOG_LEVEL=dev
 API_VERSION=1.0.0
-```
+'''
 
-## Lancement
+## Comment lancer le serveur
 
-```bash
-npm run dev    # développement (rechargement automatique, logs détaillés)
-npm run prod   # production
-```
+'''
+npm run dev    # pour développer (redémarre tout seul à chaque modif)
+npm run prod   # pour la vraie mise en ligne
+'''
 
-La base `database/database.sqlite` est créée automatiquement au premier
-démarrage à partir du schéma `database/database.sql`.
+La base de données (`database/database.sqlite`) se crée toute seule au
+premier démarrage, pas besoin de la créer à la main.
 
-## Documentation interactive
+## Voir la documentation et tester l'API
 
-Une fois le serveur démarré : http://localhost:8080/api-docs
+Une fois le serveur lancé, aller sur : http://localhost:8080/api-docs
 
-Elle permet de choisir le serveur (`api-v1` ou `api-v2`) en haut de la page
-et de tester toutes les routes directement depuis le navigateur.
+C'est une page qui liste toutes les routes disponibles et permet de les
+tester directement depuis le navigateur, sans taper de commande. En haut
+de la page, on peut choisir entre `api-v1` et `api-v2` selon la partie
+qu'on veut tester.
 
-## Structure du projet
+## Organisation des fichiers
 
-```
+'''
 server.mjs              point d'entrée Express
 config.mjs              configuration centralisée (.env)
 database/
@@ -59,38 +65,38 @@ router/
 views/
   root.ejs               page HTML (formulaire + résultat) pour l'API v2
 static/
-  open-api.yaml           spécification Swagger/OpenAPI
-  client.html / app.js    client AJAX (SPA) consommant l'API v2 en JSON
-  logo_univ_16.png        favicon
+  open-api.yaml           décrit toutes les routes pour la doc Swagger
+  client.html / app.js    la page qui utilise l'API sans recharger (AJAX)
+  logo_univ_16.png        petite image utilisée comme favicon
 REPONSES.md              réponses aux questions de la partie 1
-```
+'''
 
-## Routes principales
+## Les routes principales
 
-| Méthode | Route              | v1 (JSON) | v2 (JSON ou HTML)                          |
-|---------|---------------------|-----------|---------------------------------------------|
-| GET     | `/`                 | nb liens  | nb liens (JSON) / formulaire (HTML)         |
-| POST    | `/`                 | crée lien | crée lien, réponse adaptée                  |
-| GET     | `/status/:url`      | infos lien | *(supprimée, remplacée par `GET /:url` JSON)* |
-| GET     | `/:url`             | redirige  | infos (JSON) / redirige + compte (HTML)     |
-| DELETE  | `/:url`             | —         | supprime le lien (clé `X-API-Key` requise)  |
-| GET     | `/error`            | erreur 500 | —                                            |
+| Méthode | Route              | Version 1 (JSON) | Version 2 (JSON ou HTML)                     |
+|---------|---------------------|-------------------|-----------------------------------------------|
+| GET     | `/`                 | nombre de liens créés | pareil, ou une page avec un formulaire        |
+| POST    | `/`                 | crée un lien      | pareil, ou une page qui affiche le résultat    |
+| GET     | `/status/:url`      | infos sur le lien | *(remplacée par `GET /:url` en JSON)*          |
+| GET     | `/:url`             | redirige vers le site d'origine | infos (JSON) ou redirection + comptage (HTML) |
+| DELETE  | `/:url`             | pas disponible    | supprime le lien (il faut la clé `X-API-Key`) |
+| GET     | `/error`            | provoque une erreur 500 (pour tester) | —                                |
 
-## Client AJAX
+## La page qui utilise l'API sans recharger (AJAX)
 
-Servi statiquement à `http://localhost:8080/client.html`. Utilise `fetch`
-pour dialoguer en JSON avec `/api-v2/`. Un bouton « Copier l'URL » utilise
-`navigator.clipboard.writeText()`.
+Accessible sur `http://localhost:8080/client.html`. Elle envoie les
+requêtes en JSON vers `/api-v2/` sans jamais recharger la page. Il y a un
+bouton « Copier l'URL » qui copie le lien directement dans le presse-papier.
 
-## Tests manuels
+## Comment tester à la main (sans navigateur)
 
-```bash
-# compter les liens
+'''
+# voir combien de liens existent
 http http://localhost:8080/api-v1/
 
 # créer un lien
 http POST http://localhost:8080/api-v1/ url="https://perdu.com"
 
-# supprimer un lien (api-v2 uniquement)
+# supprimer un lien (uniquement possible sur l'api-v2, avec la bonne clé)
 http DELETE http://localhost:8080/api-v2/HdPWk7 X-API-Key:RatQak
-```
+'''
