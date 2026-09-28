@@ -11,7 +11,7 @@ import {
 
 const router = Router();
 
-/** Petit wrapper pour éviter les try/catch répétés avec async/await. */
+/** pour éviter les try/catch répétés avec async/await. */
 const asyncHandler = (fn) => (req, res, next) => fn(req, res, next).catch(next);
 
 /** Vérifie qu'une chaîne est une URL absolue syntaxiquement valide. */
@@ -81,7 +81,6 @@ router.get(
 );
 
 // GET /api-v1/:url : redirige vers l'URL d'origine (ne répond pas de JSON)
-// Placée en dernier pour ne pas capter /status/:url ou /error avant eux.
 router.get(
   "/:url",
   asyncHandler(async (req, res) => {
