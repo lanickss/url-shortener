@@ -1,4 +1,4 @@
-# Réponses - Partie 1 : prise en main
+# Réponses — Partie 1 : prise en main
 
 **1. Commande httpie équivalente à la requête curl POST**
 
@@ -8,21 +8,22 @@ http POST http://localhost:8080/api-v1/ url="https://perdu.com"
 
 **2. Différences entre `npm run prod` et `npm run dev`**
 
-- `npm run dev` lance `nodemon` avec `NODE_ENV=development` : le serveur
-  redémarre automatiquement à chaque modification de fichier, les logs HTTP
-  (morgan) sont détaillés (format `dev`, coloré, avec le temps de réponse),
-  et les erreurs peuvent être renvoyées avec plus de détails/stack trace.
-- `npm run prod` lance directement `node` avec `NODE_ENV=production` : pas de
-  rechargement automatique, des logs plus compacts (format `combined`), et
-  Express active en interne des optimisations (cache des vues compilées,
-  minification légère) liées à `NODE_ENV=production`.
+-En dev, le serveur redémarre tout seul à chaque fois qu'on modifie un 
+fichier (grâce à l'outil "nodemon"). Pratique pendant qu'on code, on 
+n'a pas besoin de tout arrêter/relancer à la main. Les messages 
+affichés dans le terminal sont aussi plus détaillés.
+
+-En prod, le serveur ne redémarre pas tout seul, et les messages 
+affichés sont plus courts. C'est le mode utilisé quand l'application 
+est en ligne pour de vrai, pas pendant qu'on développe.
 
 **3. Script npm pour formatter automatiquement les fichiers `.mjs`**
 
 ```
 npm run format
 ```
-qui exécute `prettier --write "**/*.mjs"` (voir `package.json`).
+ca arrange et uniforme l'ecriture du code automatiquement sans qu'on 
+ait a le faire.
 
 **4. Configuration Express pour supprimer l'en-tête `X-Powered-By`**
 
@@ -39,8 +40,9 @@ app.use((req, res, next) => {
   next();
 });
 ```
-La version est lue depuis `config.mjs` (variable d'environnement
-`API_VERSION`), pour éviter de la coder en dur.
+-Un "middleware" est juste une fonction qui s'exécute sur chaque 
+requête avant d'arriver à la vraie route. Ici, elle ajoute un en-tête 
+personnalisé dans chaque réponse pour indiquer la version de l'appli.
 
 **6. Middleware Express pour répondre aux requêtes `favicon.ico`**
 
@@ -50,50 +52,38 @@ Le paquet [`serve-favicon`](https://www.npmjs.com/package/serve-favicon) :
 import favicon from "serve-favicon";
 app.use(favicon(join(__dirname, "static", "logo_univ_16.png")));
 ```
-Il doit être monté tôt dans la chaîne de middlewares (avant les routes) et
-répond directement aux requêtes `GET /favicon.ico` avec le fichier donné,
-en gérant lui-même la mise en cache (en-têtes `ETag`/`Cache-Control`).
+Quand le navigateur demande automatiquement /favicon.ico (il le fait 
+toujours, même sans qu'on lui demande), cet outil répond avec notre 
+image au lieu de renvoyer une erreur.
 
 **7. Documentation du driver SQLite utilisé**
-
-Le projet utilise le paquet [`sqlite`](https://github.com/kriasoft/node-sqlite)
-(wrapper Promise/async au-dessus de [`sqlite3`](https://github.com/TryGhost/node-sqlite3)) :
+On utilise SQLite en utilisant ces deux liens:
 
 - https://www.npmjs.com/package/sqlite
 - https://github.com/TryGhost/node-sqlite3/wiki/API
 
 **8. Ouverture/fermeture de la connexion à la base de données**
 
-La connexion est ouverte **une seule fois**, au démarrage du serveur, dans
-`connectDatabase()` (`database/database.mjs`), appelée depuis `server.mjs`
-avant `app.listen()`. Elle est ensuite réutilisée pour toutes les requêtes
-HTTP pendant toute la durée de vie du processus (pas de coût d'ouverture à
-chaque requête). Elle est fermée proprement dans `closeDatabase()`, appelée
-sur réception des signaux `SIGINT` (Ctrl+C) ou `SIGTERM`, pour éviter de
-corrompre le fichier `.sqlite` en cas d'arrêt brutal.
+Elle s'ouvre une seule fois, au tout début, quand le serveur démarre. 
+Elle reste ouverte tout le temps que le serveur tourne (on ne la rouvre 
+pas à chaque requête, ce serait trop lent). Elle se ferme seulement 
+quand on arrête le serveur (par exemple en faisant Ctrl+C).
 
 **9. Navigation privée + `Ctrl+Shift+R` : gestion du cache par Express**
 
-Par défaut, `express.static` (et les réponses JSON de nos routes) n'envoie
-pas d'en-têtes de cache agressifs pour du contenu dynamique : chaque visite
-recharge la page. En revanche, pour les fichiers statiques (CSS, JS, images
-servis par `express.static`), Express ajoute par défaut un en-tête
-`Cache-Control: public, max-age=0` avec des en-têtes `ETag`/`Last-Modified` :
-le navigateur revalide donc le fichier (requête conditionnelle) plutôt que
-de le recharger entièrement à chaque visite. Un rechargement forcé avec
-`Ctrl+Shift+R` ("hard reload") ignore complètement le cache local et
-force le navigateur à re-télécharger tous les fichiers, contournant même la
-revalidation conditionnelle. Conclusion : Express ne met pas en cache les
-réponses dynamiques (API), mais laisse le navigateur gérer le cache des
-fichiers statiques via des en-têtes de validation plutôt qu'un cache "dur".
+Les pages qui changent tout le temps (JSON, résultats de l'API) ne sont 
+jamais gardées en mémoire par le navigateur, elles sont toujours 
+redemandées au serveur. Par contre, les fichiers qui ne changent pas 
+souvent (images, CSS, JS) sont gardés en mémoire par le navigateur, 
+mais celui-ci revérifie quand même auprès du serveur si le fichier a 
+changé, avant de réutiliser sa copie. Faire Ctrl+Shift+R force le 
+navigateur à tout retélécharger sans rien garder en mémoire, même ce 
+qui n'a pas changé.
 
 **10. Deux instances (8080 et 8081) : partage des liens créés**
 
-Les liens créés sur l'instance `8080` sont visibles depuis l'instance
-`8081` car **les deux processus utilisent le même fichier SQLite**
-(`database/database.sqlite`, défini par la variable d'environnement
-`DB_FILE`, identique dans les deux cas). Le port HTTP n'a aucun rapport
-avec la base de données : ce sont deux serveurs Express distincts qui
-pointent vers la même source de données persistante sur disque. Si l'on
-voulait les isoler, il faudrait leur donner des fichiers `DB_FILE`
-différents (ex: `DB_FILE=database/db-8081.sqlite`).
+Parce que les deux utilisent le même fichier de base de données sur le 
+disque dur. Le numéro de port ne sert qu'à savoir sur quelle "porte" le 
+serveur écoute les requêtes du navigateur — ça n'a rien à voir avec où 
+sont stockées les données. Comme le fichier de base de données est le 
+même pour les deux serveurs, ils voient forcément les mêmes liens créés.
