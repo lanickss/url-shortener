@@ -1,0 +1,179 @@
+openapi: 3.0.3
+info:
+  title: Réducteur d'URL
+  description: API de réduction d'URL, inspirée de bit.ly / tinyurl.com.
+  version: 1.0.0
+
+servers:
+  - url: /api-v1
+    description: API v1 — JSON uniquement
+  - url: /api-v2
+    description: API v2 — négociation de contenu JSON/HTML + suppression
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Clé secrète générée à la création du lien, requise pour le supprimer.
+
+  schemas:
+    Link:
+      type: object
+      properties:
+        short_url:
+          type: string
+          example: WmFJQp
+        origin_url:
+          type: string
+          format: uri
+          example: https://nodejs.org/api/http.html#event-connect_1
+        created_at:
+          type: string
+          format: date-time
+        visits:
+          type: integer
+          example: 0
+    Count:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 42
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+    NewLink:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
+          example: https://perdu.com
+
+paths:
+  /:
+    get:
+      summary: Nombre de liens créés
+      responses:
+        "200":
+          description: Nombre de liens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Count"
+    post:
+      summary: Crée un lien réduit à partir d'une URL longue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewLink"
+      responses:
+        "201":
+          description: Lien créé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Link"
+        "400":
+          description: URL manquante ou invalide
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /status/{url}:
+    get:
+      summary: État d'un lien (uniquement disponible sur api-v1)
+      parameters:
+        - name: url
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Informations sur le lien
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Link"
+        "404":
+          description: Lien inconnu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /error:
+    get:
+      summary: Route de test générant systématiquement une erreur 500
+      responses:
+        "500":
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /{url}:
+    get:
+      summary: Redirige vers l'URL d'origine (HTML) ou renvoie son état (JSON)
+      parameters:
+        - name: url
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Informations sur le lien (réponse JSON, api-v2 uniquement)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Link"
+        "302":
+          description: Redirection vers l'URL d'origine (réponse HTML)
+        "404":
+          description: Lien inconnu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Supprime un lien raccourci (api-v2 uniquement)
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: url
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lien supprimé
+        "401":
+          description: En-tête X-API-Key manquante
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Clé secrète invalide
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Lien inconnu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Réducteur d'URL</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      max-width: 32rem;
+      margin: 4rem auto;
+      padding: 0 1.5rem;
+      line-height: 1.5;
+    }
+    h1 { font-size: 1.4rem; }
+    form { display: flex; gap: 0.5rem; margin: 1.5rem 0; }
+    input[type="url"] {
+      flex: 1;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #999;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    button {
+      padding: 0.6rem 1.1rem;
+      border: none;
+      border-radius: 6px;
+      background: #2b6cb0;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover { background: #24568f; }
+    .count { color: #666; font-size: 0.95rem; }
+    .result {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background: #f0f5fb;
+    }
+    .result a { font-weight: 600; }
+    .error {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background: #fdecea;
+      color: #a12a2a;
+    }
+    code { background: #eee; padding: 0.1rem 0.35rem; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Réducteur d'URL</h1>
+  <p class="count"><%= count %> lien<%= count === 1 ? "" : "s" %> déjà créé<%= count === 1 ? "" : "s" %>.</p>
+
+  <form method="post" action="/api-v2/" id="submit-link">
+    <input name="url" id="url" type="url" placeholder="https://perdu.com" required value="<%= typeof submittedUrl !== 'undefined' ? submittedUrl : '' %>" />
+    <button type="submit">Raccourcir</button>
+  </form>
+
+  <% if (typeof link !== "undefined" && link) { %>
+    <div class="result">
+      <p>Lien créé pour <code><%= link.origin_url %></code> :</p>
+      <p><a href="/api-v2/<%= link.short_url %>"><%= origin %>/api-v2/<%= link.short_url %></a></p>
+    </div>
+  <% } %>
+
+  <% if (typeof error !== "undefined" && error) { %>
+    <div class="error"><%= error %></div>
+  <% } %>
+</body>
+</html>

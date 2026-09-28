@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Réducteur d'URL — client AJAX</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      max-width: 32rem;
+      margin: 4rem auto;
+      padding: 0 1.5rem;
+      line-height: 1.5;
+    }
+    h1 { font-size: 1.4rem; }
+    form { display: flex; gap: 0.5rem; margin: 1.5rem 0; }
+    input[type="url"] {
+      flex: 1;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #999;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    button {
+      padding: 0.6rem 1.1rem;
+      border: none;
+      border-radius: 6px;
+      background: #2b6cb0;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover { background: #24568f; }
+    button.secondary { background: #555; }
+    button.secondary:hover { background: #333; }
+    .count { color: #666; font-size: 0.95rem; }
+    .result {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background: #f0f5fb;
+      display: none;
+    }
+    .result.visible { display: block; }
+    .result a { font-weight: 600; word-break: break-all; }
+    .result .actions { margin-top: 0.75rem; display: flex; gap: 0.5rem; align-items: center; }
+    .copied { color: #2f855a; font-size: 0.9rem; }
+    .error {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background: #fdecea;
+      color: #a12a2a;
+      display: none;
+    }
+    .error.visible { display: block; }
+    code { background: #eee; padding: 0.1rem 0.35rem; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Réducteur d'URL — client AJAX</h1>
+  <p class="count" id="count">…</p>
+
+  <form id="submit-link">
+    <input name="url" id="url" type="url" placeholder="https://perdu.com" required />
+    <button type="submit">Raccourcir</button>
+  </form>
+
+  <div class="result" id="result">
+    <p>Lien créé pour <code id="origin-url"></code> :</p>
+    <p><a id="short-link" href="#" target="_blank" rel="noopener"></a></p>
+    <div class="actions">
+      <button type="button" class="secondary" id="copy-btn">Copier l'URL</button>
+      <span class="copied" id="copied-msg" style="display:none;">Copié !</span>
+    </div>
+  </div>
+
+  <div class="error" id="error"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
