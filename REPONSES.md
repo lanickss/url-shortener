@@ -1,4 +1,4 @@
-# Réponses — Partie 1 : prise en main
+# Réponses - Partie 1 : prise en main
 
 **1. Commande httpie équivalente à la requête curl POST**
 
