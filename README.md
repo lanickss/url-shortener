@@ -4,6 +4,11 @@ Ce projet permet de transformer une URL longue en un lien court, un peu
 comme bit.ly ou tinyurl.com. Il y a une API (qui répond en JSON) et deux
 petites interfaces web pour l'utiliser sans passer par des commandes.
 
+j'ai demander a l'ia de commenter mes fonctions pour avoir une meilleure comprehension de
+ce que je fais au fur et mesure que j'avance pour ne pas etre perdu lorsque je reprends le projet 
+dans le temps. Car plus on avance, plus on code et plus on ne se souvient plus de pourqui on a fait cela,
+donc je me suis aide de l'ia pour commenter mes lignes de codes et me rememore ou 'en etais dans le projet.
+
 ## Ce qui a été fait
 
 - [x] Partie 1 : réponses aux questions — tag `reponses`
